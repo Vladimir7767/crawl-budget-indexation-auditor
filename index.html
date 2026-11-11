@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Аудитор Краулингового Бюджета и Индексного Раздутия — IMPERIA Hub</title>
+<meta name="description" content="Профессиональный SEO-симулятор краулингового бюджета Googlebot. Расчет емкости сканирования, TTFB-задержек, штрафов за рендеринг JS и скорости индексации.">
+<style>
+:root {
+  --primary: #0284c7;
+  --primary-hover: #0369a1;
+  --success: #10b981;
+  --danger: #ef4444;
+  --bg: #f4f6f9;
+  --card-bg: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #f59e0b;
+  --purple: #8b5cf6;
+  --slate: #334155;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+body { background: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.wrapper { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; width: 100%; max-width: 550px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+h1 { font-size: 21px; font-weight: 700; margin-bottom: 4px; text-align: center; letter-spacing: -0.025em; }
+.subtitle { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 20px; }
+.live-meter { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 20px; text-align: center; }
+.meter-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.05em; }
+.bar-container { background: var(--border); border-radius: 20px; height: 12px; width: 100%; overflow: hidden; position: relative; }
+.bar-fill { background: var(--primary); width: 0%; height: 100%; transition: all 0.4s ease; }
+.group { margin-bottom: 16px; }
+label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+select, input[type="number"] { width: 100%; padding: 11px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; background: #fff; color: var(--text); transition: border 0.2s; }
+select:focus, input:focus { border-color: var(--primary); outline: none; }
+input[type="range"] { width: 100%; margin: 8px 0; cursor: pointer; }
+.range-val { font-size: 14px; font-weight: 700; color: var(--primary); float: right; }
+.calc-btn { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 6px -1px rgba(2,132,199,0.2); transition: background 0.2s; }
+.calc-btn:hover { background: var(--primary-hover); }
+.copy-btn { width: 100%; padding: 11px; background: #f8fafc; color: var(--slate); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: all 0.2s; }
+.copy-btn:hover { background: #e2e8f0; }
+.skynet-box { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 12px; padding: 14px; margin-top: 20px; display: none; }
+.skynet-title { font-size: 12px; font-weight: 700; color: var(--danger); margin-bottom: 6px; text-transform: uppercase; text-align: center; letter-spacing: 0.05em; }
+.results { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 20px; display: none; }
+.results-title { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; }
+.res-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; border-bottom: 1px dashed var(--border); align-items: center; }
+.res-row:last-child { border-bottom: none; }
+.res-val { font-weight: 700; color: var(--primary); text-align: right; max-width: 65%; }
+.partner-btn { display: block; width: 100%; padding: 11px; background: #fff; border: 1px solid var(--purple); color: var(--purple); border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; margin-top: 12px; text-decoration: none; }
+.partner-btn:hover { background: var(--purple); color: #fff; }
+.math-log-box { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-top: 12px; font-family: monospace; font-size: 12px; color: var(--slate); display: none; }
+.seo-text { font-size: 12px; color: var(--text-muted); margin-top: 24px; text-align: justify; line-height: 1.4; border-top: 1px solid var(--border); padding-top: 16px; display: none; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <h1>Аудитор Краулингового Бюджета</h1>
+  <div class="subtitle">Симуляция пропускной способности Googlebot, Index Bloat и рендеринга WRS</div>
+
+  <div class="live-meter">
+    <div class="meter-label">Состояние индексации сайта: <span id="live-preview-zone">Ожидание данных</span></div>
+    <div class="bar-container"><div class="bar-fill" id="bar-fill"></div></div>
+  </div>
+
+  <div class="group">
+    <label for="total-urls">Общее количество URL в индексе / Sitemap (все страницы)</label>
+    <input type="number" id="total-urls" value="15000" min="1" max="10000000" oninput="updatePreview()">
+  </div>
+
+  <div class="group">
+    <label for="useful-urls">Количество реально полезных / коммерческих страниц</label>
+    <input type="number" id="useful-urls" value="3500" min="1" max="10000000" oninput="updatePreview()">
+    <span style="font-size: 11px; color: var(--text-muted);">Разница между общими и полезными URL — это технический мусор (пагинация, теги, фильтры)</span>
+  </div>
+  <div class="group">
+    <label for="server-ttfb">Среднее время ответа сервера TTFB (мс) <span class="range-val" id="ttfb-val">350 мс</span></label>
+    <input type="range" id="server-ttfb" min="30" max="2500" value="350" step="10" oninput="document.getElementById('ttfb-val').innerText=this.value+' мс'; updatePreview();">
+    <span style="font-size: 11px; color: var(--text-muted);">Норма для мгновенной индексации: &lt; 200 мс (GitHub Pages / NVMe VPS)</span>
+  </div>
+
+  <div class="group">
+    <label for="render-type">Архитектура рендеринга страниц (WRS Фактор)</label>
+    <select id="render-type" onchange="updatePreview()">
+      <option value="static">Чистый статический HTML / SSR (Мгновенное чтение без очередей)</option>
+      <option value="cms">Классическая CMS с плагинами (WordPress / OpenCart, умеренная нагрузка)</option>
+      <option value="spa-js">Тяжелый Client-Side JS (React / Vue / Angular без SSR, штраф WRS x9)</option>
+    </select>
+  </div>
+
+  <div class="group">
+    <label for="click-depth">Средняя глубина вложенности (Click Depth от Главной)</label>
+    <select id="click-depth" onchange="updatePreview()">
+      <option value="1">1–2 клика (Плоская архитектура, максимальный приоритет обхода)</option>
+      <option value="3">3 клика (Стандартная структура, умеренное затухание веса)</option>
+      <option value="4">4+ клика (Глубокая изоляция, бот заходит раз в несколько месяцев)</option>
+    </select>
+  </div>
+
+  <div class="group">
+    <label for="domain-dr">Авторитет домена (Ahrefs DR / Ссылочный траст) <span class="range-val" id="dr-val">25</span></label>
+    <input type="range" id="domain-dr" min="0" max="100" value="25" oninput="document.getElementById('dr-val').innerText=this.value; updatePreview();">
+  </div>
+
+  <button class="calc-btn" onclick="calculateCrawlBudget()">Запустить аудит краулингового бюджета</button>
+
+  <div class="results" id="results-box">
+    <div class="results-title">Аналитика пропускной способности Googlebot</div>
+    <div class="res-row"><span>Индексное раздутие (Index Bloat):</span><span class="res-val" id="res-bloat" style="color:var(--danger)">0%</span></div>
+    <div class="res-row"><span>Емкость обхода (Crawl Capacity):</span><span class="res-val" id="res-capacity">0 стр/день</span></div>
+    <div class="res-row"><span>Полезный расход бюджета бота:</span><span class="res-val" id="res-efficiency" style="color:var(--success)">0%</span></div>
+    <div class="res-row"><span>Время полного обхода всего сайта:</span><span class="res-val" id="res-full-crawl" style="color:var(--purple)">0 дней</span></div>
+    <div class="res-row"><span>Прогноз индексации новой статьи:</span><span class="res-val" id="res-index-speed" style="color:var(--primary)">0 минут</span></div>
+
+    <div class="math-log-box" id="math-log-container"></div>
+    <button class="copy-btn" id="copy-report-btn" onclick="copyAuditReport()">📋 Скопировать отчет аудита для клиента / ТЗ</button>
+    <a href="https://amazon.com" target="_blank" class="partner-btn" id="partner-link">🚀 Подобрать скоростные NVMe VPS и серверное железо</a>
+  </div>
+
+  <div class="skynet-box" id="skynet-container">
+    <div class="skynet-title">🔮 Вердикт алгоритма по потерям индексации</div>
+    <div class="res-row" style="border-bottom:none; color:#991b1b; font-size:12px; text-align:justify;"><span id="skynet-verdict">Ожидание анализа серверных задержек и мусорных URL.</span></div>
+  </div>
+
+  <div id="ads" class="ad-banner"><div id="container-e8c895e6c70ade8e4ef4a72354f42e97"></div></div>
+
+  <div class="seo-text" id="seo-box">
+    Профессиональный онлайн-калькулятор краулингового бюджета (Crawl Budget) и индексного раздутия (Index Bloat) предоставляет открытую методологию аудита пропускной способности поисковых роботов Googlebot и Яндекс.Алгоритм моделирует баланс между емкостью сканирования (Crawl Capacity, зависящей от времени ответа сервера TTFB и стоимости рендеринга JavaScript в системе WRS) и спросом на сканирование (Crawl Demand на основе траста домена и глубины вложенности Click Depth). Инструмент разработан для выявления технических бутылочных горлышек в архитектуре крупных сайтов и PBN-сеток, предотвращая застревание коммерческих страниц в статусе «Обнаружена, но не проиндексирована». Все вычисления выполняются локально на стороне клиента без отправки логов на внешние серверы.
+  </div>
+</div>
+
+<script>
+window.onload = function() {
+  updatePreview();
+};
+
+window.lastAdShowTime = 0;
+
+// ИМПЕРСКИЙ АНТИ-ФРОД И АНТИ-БАН МОДУЛЬ ЗАЩИТЫ РЕКЛАМЫ
+function showAdsFunc() {
+  if (navigator.webdriver || !navigator.userAgent || navigator.userAgent.includes("Speed Insights") || navigator.userAgent.includes("Lighthouse")) {
+    return false;
+  }
+  const currentTime = Date.now();
+  if (currentTime - window.lastAdShowTime < 60000) {
+    return false;
+  }
+  const c = document.getElementById('ads');
+  if (!c) return false;
+
+  if (!window.adScriptLoaded) {
+    window.atOptions = {'key':'e8c895e6c70ade8e4ef4a72354f42e97','format':'iframe','height':90,'width':728,'params':{} };
+    try {
+      var s = document.createElement('script');
+      s.type = 'text/javascript'; s.async = true;
+      s.src = ['https://', 'bagelstoppage.', 'com/', 'e8c895e6c70ade8e4ef4a72354f42e97/', 'invoke.js'].join('');
+      c.appendChild(s);
+      window.adScriptLoaded = true;
+      window.lastAdShowTime = currentTime;
+    } catch(e) { return false; }
+  }
+  c.style.display = 'flex';
+  return true;
+}
+let lastReportText = "";
+
+function runCalculationCore() {
+  const totalUrls = parseFloat(document.getElementById('total-urls').value) || 1;
+  let usefulUrls = parseFloat(document.getElementById('useful-urls').value) || 0;
+  if (usefulUrls > totalUrls) usefulUrls = totalUrls;
+
+  const ttfb = parseFloat(document.getElementById('server-ttfb').value) || 350;
+  const renderType = document.getElementById('render-type').value;
+  const clickDepth = parseInt(document.getElementById('click-depth').value) || 1;
+  const domainDr = parseFloat(document.getElementById('domain-dr').value) || 0;
+
+  // 1. Расчет индексного раздутия (Index Bloat %)
+  const trashUrls = totalUrls - usefulUrls;
+  const bloatPercent = (trashUrls / totalUrls) * 100;
+  const efficiencyPercent = 100 - bloatPercent;
+
+  // 2. Расчет базовой емкости сканирования (Crawl Capacity) от скорости TTFB и DR
+  // Быстрый сервер (<100мс) дает до 5000+ обходов в день даже на среднем DR
+  let speedFactor = 200 / ttfb;
+  if (speedFactor > 4.0) speedFactor = 4.0;
+  if (speedFactor < 0.1) speedFactor = 0.1;
+
+  let trustDemand = 150 + (domainDr * 120); // Спрос от DR домена
+
+  // 3. Штраф за рендеринг JavaScript в WRS (Web Rendering Service)
+  let renderPenalty = 1.0;
+  let renderNote = "Чистый статический HTML (Мгновенный парсинг, штраф 0%)";
+  if (renderType === 'cms') {
+    renderPenalty = 0.65; // Потеря 35% ресурсов на тяжелых запросах CMS
+    renderNote = "Классическая CMS (Потеря 35% емкости на генерацию DOM)";
+  } else if (renderType === 'spa-js') {
+    renderPenalty = 0.15; // Очередь рендеринга JS сжирает до 85% бюджета
+    renderNote = "Client-Side JS / SPA (Критический штраф WRS-очереди -85%)";
+  }
+
+  // 4. Штраф за глубину вложенности (Click Depth)
+  let depthMultiplier = 1.0;
+  if (clickDepth === 3) depthMultiplier = 0.70;
+  if (clickDepth === 4) depthMultiplier = 0.30;
+
+  // Итоговая дневная пропускная способность Googlebot (страниц в день)
+  let dailyCapacity = Math.round(trustDemand * speedFactor * renderPenalty * depthMultiplier);
+  if (dailyCapacity < 1) dailyCapacity = 1;
+
+  // 5. Время полного обхода всего сайта (в днях)
+  const fullCrawlDays = totalUrls / dailyCapacity;
+
+  // 6. Прогноз скорости индексации новой статьи
+  // Учитывает отношение дневного лимита к общему мусору на сайте
+  let indexSpeedText = "";
+  let indexMinutes = (totalUrls / dailyCapacity) * 180 * (bloatPercent > 50 ? 2.5 : 1.0);
+  if (renderType === 'static' && ttfb <= 150 && bloatPercent < 20) {
+    indexMinutes = Math.max(15, Math.round(ttfb / 4)); // Уровень GitHub Pages (15-45 мин)
+  }
+
+  if (indexMinutes < 60) {
+    indexSpeedText = `~${Math.round(indexMinutes)} минут (Мгновенно)`;
+  } else if (indexMinutes < 1440) {
+    indexSpeedText = `~${(indexMinutes / 60).toFixed(1)} часов`;
+  } else {
+    indexSpeedText = `~${Math.round(indexMinutes / 1440)} дней (Риск песочницы)`;
+  }
+
+  const logHtml = `
+    <strong>[LOG] Открытый математический аудит Googlebot (WRS &amp; Crawl Core):</strong><br>
+    1. Всего URL = ${totalUrls} | Полезных = ${usefulUrls} | Мусорные дубли = ${trashUrls} (Index Bloat = ${bloatPercent.toFixed(1)}%)<br>
+    2. Сервер TTFB = ${ttfb}мс (Коэффициент скорости = ${speedFactor.toFixed(2)}x)<br>
+    3. Архитектура: ${renderNote} (Множитель = ${renderPenalty})<br>
+    4. Глубина вложенности = ${clickDepth} клик(а) (Коэффициент затухания = ${depthMultiplier})<br>
+    5. Спрос по трасту (DR ${domainDr}) = ${trustDemand} базовых запросов/день<br>
+    6. Итоговая емкость обхода (Crawl Capacity) = ${dailyCapacity} стр/день<br>
+    7. Цикл полного переобхода всего индекса = ${fullCrawlDays.toFixed(1)} дней.
+  `;
+
+  lastReportText = `📊 ОТЧЕТ ТЕХНИЧЕСКОГО SEO-АУДИТА (CRAWL BUDGET):\n` +
+    `• Индексное раздутие (мусорные URL): ${bloatPercent.toFixed(1)}% (${trashUrls} из ${totalUrls} стр.)\n` +
+    `• Полезный расход бюджета Googlebot: ${efficiencyPercent.toFixed(1)}%\n` +
+    `• Скорость ответа сервера (TTFB): ${ttfb} мс\n` +
+    `• Пропускная способность бота: ~${dailyCapacity} стр/день\n` +
+    `• Полный цикл переобхода сайта: ${fullCrawlDays.toFixed(1)} дн.\n` +
+    `• Прогноз индексации новых страниц: ${indexSpeedText}\n` +
+    `Сгенерировано в IMPERIA Web Tools Hub`;
+
+  return {
+    bloat: bloatPercent.toFixed(1) + "%",
+    capacity: dailyCapacity.toLocaleString() + " стр/день",
+    efficiency: efficiencyPercent.toFixed(1) + "%",
+    fullCrawl: fullCrawlDays < 1 ? "< 1 дня" : fullCrawlDays.toFixed(1) + " дн.",
+    indexSpeed: indexSpeedText,
+    rawBloat: bloatPercent,
+    rawCapacity: dailyCapacity,
+    rawDays: fullCrawlDays,
+    ttfb: ttfb,
+    renderType: renderType,
+    log: logHtml
+  };
+}
+
+function updatePreview() {
+  const data = runCalculationCore();
+  if (!data) return;
+
+  let zone = "🔥 Мгновенная индексация (Эталонный траст)";
+  let color = "var(--success)";
+  let barWidth = 92;
+
+  if (data.rawDays > 30 || data.rawBloat >= 70) {
+    zone = "🚨 ИНДЕКСНАЯ КОМА: Бот задыхается в мусоре и тормозах";
+    color = "var(--danger)";
+    barWidth = 15;
+  } else if (data.rawDays > 7 || data.rawBloat >= 40 || data.ttfb > 500) {
+    zone = "⚠️ Утечка краулингового бюджета (Медленный обход)";
+    color = "var(--accent)";
+    barWidth = 50;
+  }
+
+  const preview = document.getElementById('live-preview-zone');
+  preview.innerText = zone;
+  preview.style.color = color;
+
+  const fill = document.getElementById('bar-fill');
+  fill.style.width = barWidth + '%';
+  fill.style.background = color;
+
+  const pLink = document.getElementById('partner-link');
+  if (pLink) {
+    if (data.ttfb > 400) {
+      pLink.innerText = "🔥 Срочно сменить хостинг на быстрый NVMe VPS (TTFB < 100мс)";
+    } else {
+      pLink.innerText = "🚀 Подобрать серверное железо и прокси для парсинга на Amazon";
+    }
+  }
+}
+
+function copyAuditReport() {
+  if (!lastReportText) return;
+  navigator.clipboard.writeText(lastReportText).then(() => {
+    const btn = document.getElementById('copy-report-btn');
+    const oldText = btn.innerText;
+    btn.innerText = "✅ Отчет скопирован в буфер обмена!";
+    btn.style.background = "#dcfce7";
+    btn.style.color = "#166534";
+    setTimeout(() => {
+      btn.innerText = oldText;
+      btn.style.background = "#f8fafc";
+      btn.style.color = "var(--slate)";
+    }, 2500);
+  });
+}
+
+function calculateCrawlBudget() {
+  const data = runCalculationCore();
+  if (!data) return;
+
+  document.getElementById('res-bloat').innerText = data.bloat;
+  document.getElementById('res-capacity').innerText = data.capacity;
+  document.getElementById('res-efficiency').innerText = data.efficiency;
+  document.getElementById('res-full-crawl').innerText = data.fullCrawl;
+  document.getElementById('res-index-speed').innerText = data.indexSpeed;
+
+  const logBox = document.getElementById('math-log-container');
+  logBox.innerHTML = data.log;
+  logBox.style.display = 'block';
+
+  let verdict = "Архитектура вашего сайта оптимизирована под требования поисковых краулеров. Низкий процент технического мусора и быстрый отклик позволяют Googlebot индексировать новые материалы с минимальной задержкой.";
+
+  if (data.rawDays > 30 || data.rawBloat >= 70) {
+    verdict = `🚨 КРИТИЧЕСКОЕ ИСТОЩЕНИЕ БЮДЖЕТА: Ваш сайт теряет до ${data.bloat} ресурсов поискового робота на сканирование мусорных дублей и технических страниц. При текущей скорости ответа сервера (${data.ttfb} мс) полный обход домена растягивается на ${data.fullCrawl}. Новые коммерческие статьи будут месяцами висеть в статусе «Обнаружена, но не проиндексирована». Немедленно закройте пагинацию и фильтры в robots.txt и ускорьте отдачу HTML.`;
+  } else if (data.renderType === 'spa-js') {
+    verdict = `⚠️ ШТРАФ ЗА CLIENT-SIDE РЕНДЕРИНГ (WRS): Использование тяжелого клиентского JavaScript без предварительного рендеринга (SSR) заставляет Googlebot ставить ваши страницы в долгую очередь на выполнение скриптов. Вы теряете до 85% краулингового бюджета. Переводите ключевые посадочные страницы на статический HTML или серверный рендеринг.`;
+  }
+
+  document.getElementById('skynet-verdict').innerText = verdict;
+  document.getElementById('results-box').style.display = 'block';
+  document.getElementById('skynet-container').style.display = 'block';
+  document.getElementById('seo-box').style.display = 'block';
+
+  updatePreview();
+  showAdsFunc();
+}
+</script>
+</body>
+</html>
